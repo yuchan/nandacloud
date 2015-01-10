@@ -3,5 +3,8 @@ source "https://rubygems.org"
 
 # gem "rails"
 gem 'sinatra'
+gem 'sinatra-sequel'
 gem 'sequel'
+gem 'sqlite3'
+gem 'haml'
 
