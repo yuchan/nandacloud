@@ -1,10 +1,8 @@
 # A sample Gemfile
 source "https://rubygems.org"
 
-# gem "rails"
-gem 'sinatra'
-gem 'sinatra-sequel'
-gem 'sequel'
-gem 'sqlite3'
-gem 'haml'
+# vagrant
+gem 'chef'
+gem 'berkshelf'
+gem 'knife-solo'
 

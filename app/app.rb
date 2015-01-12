@@ -2,6 +2,7 @@ require 'bundler'
 Bundler.require
 require 'json'
 require './model/instance'
+require './lib/dcmgr'
 
 get '/' do
   haml :index
@@ -23,6 +24,7 @@ get '/instances' do
 end
 
 post '/instances' do
+  Dcmgr::ssh_connect
   "instance created"
 end
 

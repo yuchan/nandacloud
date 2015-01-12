@@ -1,0 +1,6 @@
+source "https://supermarket.getchef.com"
+
+cookbook 'git', '~> 4.1.0'
+cookbook 'kvm', '~> 0.3.1'
+cookbook 'sqlite', '~> 1.1.0'
+
