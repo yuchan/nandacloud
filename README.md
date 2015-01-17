@@ -1,6 +1,9 @@
 Nandacloud
 ===============
 
+* virt-installコマンドがインストールされていないのでインストールしてください。
+* virt-viewerがないとvncに繋げないそうです。インストールしてください。
+
 Prepare Vagrant
 --------------
 
