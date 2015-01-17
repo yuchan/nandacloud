@@ -28,6 +28,12 @@ post '/instances' do
   "instance created"
 end
 
+post '/instances/:name' do
+  dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
+  dm.launch_vm(params[:name])
+  "instance created".to_json
+end
+
 put "/instances/:id" do
   "instances updated"
 end	
