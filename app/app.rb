@@ -9,32 +9,45 @@ get '/' do
 end
 
 get '/instances/:id' do
-  @instances = Instance[params[:id]]
-  @instances.to_s
-end
-
-delete '/instances/:id' do
   @instance = Instance[params[:id]]
-  @instance.delete
+  if @instance == nil
+    {:status => "no instance"}.to_json
+  else
+    @instance.to_json
+  end
 end
 
 get '/instances' do
-  @instances = Instance.all
-  @instances.to_s
+  Instance.to_json  
 end
 
-post '/instances' do
+post '/testssh' do
   Dcmgr::ssh_connect
-  "instance created"
+  "ssh connected".to_json
 end
 
 post '/instances/:name' do
   dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
-  dm.launch_vm(params[:name])
+  data = dm.launch_vm(params[:name])
+  Instance.create({
+    :name => params[:name],
+    :host_ip => "192.168.33.21",
+    :instance_path => data[:instance_path],
+    :created => Time.now,
+    :updated => Time.now
+  })
   "instance created".to_json
 end
 
+delete '/instances/:id' do
+  dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
+  @instance = Instance[params[:id]]
+  dm.remove_vm(@instance.name, @instance.instance_path)
+  @instance.delete
+  "instance removed".to_json
+end
+
 put "/instances/:id" do
-  "instances updated"
+  "instances updated".to_json
 end	
 

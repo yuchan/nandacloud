@@ -21,35 +21,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
    end
   end
 
-    nodes = {
-        :dcnode1 => "192.168.33.21"
-    }
+  nodes = {
+    :dcnode1 => "192.168.33.21"
+  }
   
   nodes.each do |key, value|
     config.vm.define key do | dcnode |
-      dcnode.vm.hostname = "dcmem1"
+      dcnode.vm.hostname = key 
       dcnode.vm.network :private_network, ip: value
-    
+
       #config.vm.provisionのブロック
       dcnode.vm.provision 'chef_solo' do | chef |
         chef.cookbooks_path = ["./chef/cookbooks", "./chef/site-cookbooks"]
         chef.roles_path = "./chef/roles"
         chef.data_bags_path = "./chef/data_bags"
-        chef.run_list = [
-          "recipe[kvm]",
-          "recipe[kvm::host]"
-        ]
+        chef.add_recipe 'kvm'
+        chef.add_recipe 'kvm::host'
+        chef.add_recipe 'virtnode'
+      end
+
+      dcnode.vm.provider "virtualbox" do |vb|
+        vb.gui = true
       end
     end
   end
   
-#  config.vm.define :dcmem2 do | dcmem2 |
-#    dcmem2.vm.hostname = "dcmem2"
-#    dcmem2.vm.network :private_network, ip: "192.168.33.22"
-#  end
-#
-#  config.vm.define :dcmem3 do | dcmem3 |
-#    dcmem3.vm.hostname = "dcmem3"
-#    dcmem3.vm.network :private_network, ip: "192.168.33.23"
-#  end
 end

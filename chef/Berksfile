@@ -1,4 +1,4 @@
-source "https://supermarket.getchef.com"
+source "https://supermarket.chef.io"
 
 cookbook 'git', '~> 4.1.0'
 cookbook 'kvm', '~> 0.3.1'

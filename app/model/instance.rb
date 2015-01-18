@@ -1,6 +1,7 @@
 require 'bundler'
 Bundler.require
 
+Sequel::Model.plugin :json_serializer
 # Establish the database connection; or, omit this and use the DATABASE_URL
 # environment variable as the connection string:
 set :database, 'sqlite://instances.db'
@@ -16,6 +17,9 @@ migration "create instances table" do
     primary_key :id
     string      :name
     timestamp   :created, :null => false
+    string      :instance_path, :null => false
+    string      :host_ip, :null => false
+    timestamp   :updated, :null => false
   end
 end
 
