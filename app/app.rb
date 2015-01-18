@@ -23,7 +23,7 @@ end
 
 post '/testssh' do
   Dcmgr::ssh_connect
-  "ssh connected".to_json
+  {:status => "ssh connected"}.to_json
 end
 
 post '/instances/:name' do
@@ -36,15 +36,19 @@ post '/instances/:name' do
     :created => Time.now,
     :updated => Time.now
   })
-  "instance created".to_json
+  {:status => "instance created"}.to_json
 end
 
 delete '/instances/:id' do
   dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
   @instance = Instance[params[:id]]
-  dm.remove_vm(@instance.name, @instance.instance_path)
-  @instance.delete
-  "instance removed".to_json
+  if @instance != nil
+    dm.remove_vm(@instance.name, @instance.instance_path)
+    @instance.delete
+    {:status => "instance removed"}.to_json
+  else
+    {:status => "no instance"}.to_json
+  end
 end
 
 put "/instances/:id" do
