@@ -21,6 +21,13 @@ Prepare Vagrant
     vagrant-vbguest (0.10.0)
     vagrant-vbox-snapshot (0.0.8)
 
+
+### Gem install
+
+    $ cd (プロジェクトディレクトリ) && bundle install
+    $ cd (プロジェクトディレクトリ)/chef && bundle exec berks vendor cookbooks
+    $ cd (プロジェクトディレクトリ)/app && bundle install
+
 ### Vagrant VMs
 
 We use multi-vm mode.
