@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PRJ=$PWD
+PRJ=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 echo $PRJ
 
