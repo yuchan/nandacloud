@@ -16,9 +16,9 @@ migration "create instances table" do
   database.create_table :instances do
     primary_key :id
     string      :name
-    timestamp   :created, :null => false
     string      :instance_path, :null => false
     string      :host_ip, :null => false
+    timestamp   :created, :null => false
     timestamp   :updated, :null => false
   end
 end
@@ -26,4 +26,3 @@ end
 # models just work ...
 class Instance < Sequel::Model
 end
-

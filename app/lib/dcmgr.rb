@@ -10,14 +10,14 @@ class Dcmgr
 
   def self.ssh_connect(host, name, pass)
     Net::SSH.start(host, name, :password => pass) do |ssh|
-      ssh.exec "echo 'Hello'" 
+      ssh.exec "echo 'Hello'"
     end
   end
 
   def launch_vm(name)
     nodepath = "./vm/#{name}" #TODO path definition algorythm
     path = nodepath + "/centos"
-    Net::SSH.start(@host, @name, :password => @pass) do |ssh| 
+    Net::SSH.start(@host, @name, :password => @pass) do |ssh|
       cmds = ["mkdir -p #{nodepath}",
               "cd #{nodepath}",
               "qemu-img create centos 8G",
@@ -32,7 +32,7 @@ class Dcmgr
   end
 
   def remove_vm(name, path)
-    Net::SSH.start(@host, @name, :password => @pass) do |ssh| 
+    Net::SSH.start(@host, @name, :password => @pass) do |ssh|
       cmd = "virsh destroy #{name} && rm -rf #{path}"
       ssh.exec cmd do |ch, stream, data|
         if stream == :stderr
@@ -41,5 +41,19 @@ class Dcmgr
       end
     end
   end
-end
 
+  def generate_key(name)
+    filename = "test"
+    comment = "comment"
+    system("ssh-keygen -q -t rsa -C '%s' -N '' -f %s >/dev/null" %
+    [comment, filename])
+    result = ""
+    f = open(filename + ".pub", 'r')
+    f.each {|line| result += line}
+    f.close
+    key = Hash.new
+    key[:result] = result
+    key[:name] = filename
+    key
+  end
+end

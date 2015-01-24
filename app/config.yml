@@ -1,0 +1,7 @@
+greeting: Welcome to my file configurable application
+
+nodes:
+  - 192.168.33.21
+  - 192.168.33.22
+  - 192.168.33.23
+  - 192.168.33.24

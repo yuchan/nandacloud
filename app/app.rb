@@ -1,10 +1,16 @@
 require 'bundler'
 Bundler.require
 require 'json'
+require 'yaml'
 require './model/instance'
+require './model/sshkey'
 require './lib/dcmgr'
 
+config_file 'config.yml'
+
 get '/' do
+  @greeting = settings.greeting
+  @nodes = settings.nodes
   haml :index
 end
 
@@ -18,7 +24,7 @@ get '/instances/:id' do
 end
 
 get '/instances' do
-  Instance.to_json  
+  Instance.to_json
 end
 
 post '/testssh' do
@@ -27,31 +33,71 @@ post '/testssh' do
 end
 
 post '/instances/:name' do
-  dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
+  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   data = dm.launch_vm(params[:name])
-  Instance.create({
-    :name => params[:name],
-    :host_ip => "192.168.33.21",
-    :instance_path => data[:instance_path],
-    :created => Time.now,
-    :updated => Time.now
+  Instance.create(
+  {
+    name: params[:name],
+    host_ip: '192.168.33.21',
+    instance_path: data[:instance_path],
+    created: Time.now,
+    updated: Time.now
   })
-  {:status => "instance created"}.to_json
+  { status: 'instance created' }.to_json
 end
 
 delete '/instances/:id' do
-  dm = Dcmgr.new("192.168.33.21","vagrant","vagrant")
+  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   @instance = Instance[params[:id]]
-  if @instance != nil
+  if @instance
     dm.remove_vm(@instance.name, @instance.instance_path)
     @instance.delete
-    {:status => "instance removed"}.to_json
+    { status: 'instance removed' }.to_json
   else
-    {:status => "no instance"}.to_json
+    { status: 'no instance' }.to_json
   end
 end
 
-put "/instances/:id" do
-  "instances updated".to_json
-end	
+put '/instances/:id' do
+  'instances updated'.to_json
+end
 
+get '/sshkeys/:id' do
+  @sshkey = Sshkey[params[:id]]
+  if @sshkey.nil?
+    { status: 'no sshkey' }.to_json
+  else
+    @sshkey.to_json
+  end
+end
+
+get '/sshkeys' do
+  Sshkey.to_json
+end
+
+post '/sshkeys' do
+  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
+  info = dm.generate_key('test')
+  Sshkey.create(
+  {
+    name: 'test',
+    public_key: info[:result],
+    created: Time.now,
+    updated: Time.now
+  })
+  send_file "./#{info[:name]}", filename: info[:name]
+end
+
+put '/sshkeys/:id' do
+
+end
+
+delete '/sshkeys/:id' do
+  @sshkey = Sshkey[params[:id]]
+  if @sshkey
+    @sshkey.delete
+    { status: 'sshkey removed' }.to_json
+  else
+    { status: 'no sshkey' }.to_json
+  end
+end
