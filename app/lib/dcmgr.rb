@@ -21,7 +21,7 @@ class Dcmgr
       cmds = ["mkdir -p #{nodepath}",
               "cd #{nodepath}",
               "qemu-img create centos 8G",
-              "virt-install --name #{name} --ram 512 --disk centos,size=8 --location 'http://ftp.iij.ad.jp/pub/linux/centos/7/os/x86_64/'"]
+              "virt-install --graphics vnc,listen=0.0.0.0 --noautoconsole --name #{name} --ram 512 --disk centos,size=8 --location 'http://ftp.iij.ad.jp/pub/linux/centos/7/os/x86_64/'"]
       ssh.exec cmds.join(" && ") do |ch, stream, data|
         if stream == :stderr
           puts "ERROR: #{data}"

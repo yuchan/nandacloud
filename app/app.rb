@@ -1,16 +1,11 @@
 require 'bundler'
 Bundler.require
 require 'json'
-require 'yaml'
 require './model/instance'
 require './model/sshkey'
 require './lib/dcmgr'
 
-config_file 'config.yml'
-
 get '/' do
-  @greeting = settings.greeting
-  @nodes = settings.nodes
   haml :index
 end
 
@@ -78,6 +73,7 @@ end
 post '/sshkeys' do
   dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   info = dm.generate_key('test')
+  puts info.inspect
   Sshkey.create(
   {
     name: 'test',
@@ -85,7 +81,7 @@ post '/sshkeys' do
     created: Time.now,
     updated: Time.now
   })
-  send_file "./#{info[:name]}", filename: info[:name]
+  send_file "./#{info[:name]}", filename: info[:name], disposition: :attachment
 end
 
 put '/sshkeys/:id' do
