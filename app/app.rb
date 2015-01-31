@@ -5,6 +5,8 @@ require './model/instance'
 require './model/sshkey'
 require './lib/dcmgr'
 
+config_file 'config.yml'
+
 get '/' do
   haml :index
 end
@@ -73,7 +75,6 @@ end
 post '/sshkeys' do
   dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   info = dm.generate_key('test')
-  puts info.inspect
   Sshkey.create(
   {
     name: 'test',
