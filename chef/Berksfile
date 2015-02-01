@@ -3,4 +3,6 @@ source "https://supermarket.chef.io"
 cookbook 'git', '~> 4.1.0'
 cookbook 'kvm', '~> 0.3.1'
 cookbook 'sqlite', '~> 1.1.0'
+cookbook 'lxc', '~> 2.0.0'
+cookbook 'golang', '~> 1.5.0'
 

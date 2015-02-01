@@ -4,6 +4,7 @@ require 'json'
 require './model/instance'
 require './model/sshkey'
 require './lib/dcmgr'
+require './lib/ctnmgr'
 
 config_file 'config.yml'
 
@@ -41,6 +42,19 @@ post '/instances/:name' do
     updated: Time.now
   })
   { status: 'instance created' }.to_json
+end
+
+post '/containers/:name' do
+  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  data = dm.launch_vm(params[:name])
+  Instance.create(
+  {
+    name: params[:name],
+    host_ip: '192.168.33.25',
+    created: Time.now,
+    updated: Time.now
+  })
+  { status: 'container created' }.to_json
 end
 
 delete '/instances/:id' do

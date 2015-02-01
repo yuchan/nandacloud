@@ -1,14 +1,8 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  # All Vagrant configuration is done here. The most common configuration
-  # options are documented and commented below. For a complete reference,
-  # please see the online documentation at vagrantup.com.
-
-  # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "chef/centos-7.0"
-
   config.vm.define :dcmgr do | dcmgr |
+    config.vm.box = "chef/centos-7.0"
     dcmgr.vm.hostname = "dcmgr"
     dcmgr.vm.network :private_network, ip: "192.168.33.20"
     dcmgr.vm.provision 'chef_solo' do | chef |
@@ -24,10 +18,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   nodes = {
     :dcnode1 => "192.168.33.21"
   }
-  
+
   nodes.each do |key, value|
+    config.vm.box = "chef/centos-7.0"
     config.vm.define key do | dcnode |
-      dcnode.vm.hostname = key 
+      dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 
       #config.vm.provisionのブロック
@@ -39,11 +34,27 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         chef.add_recipe 'kvm::host'
         chef.add_recipe 'virtnode'
       end
+    end
+  end
 
-      dcnode.vm.provider "virtualbox" do |vb|
-        vb.gui = true
+  lxc_nodes = {
+    :dcnodelxc1 => "192.168.33.25"
+  }
+
+  lxc_nodes.each do |key, value|
+    config.vm.box = "ubuntu/trusty64"
+    config.vm.define key do | dcnode |
+      dcnode.vm.hostname = key
+      dcnode.vm.network :private_network, ip: value
+
+      #config.vm.provisionのブロック
+      dcnode.vm.provision 'chef_solo' do | chef |
+        chef.cookbooks_path = ["./chef/cookbooks", "./chef/site-cookbooks"]
+        chef.roles_path = "./chef/roles"
+        chef.data_bags_path = "./chef/data_bags"
+        chef.add_recipe 'lxc'
+        chef.add_recipe 'golang'
       end
     end
   end
-  
 end
