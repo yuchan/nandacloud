@@ -43,17 +43,25 @@ class Dcmgr
   end
 
   def generate_key(name)
-    filename = "test"
-    comment = "comment"
-    system("ssh-keygen -q -t rsa -C '%s' -N '' -f %s >/dev/null" %
-    [comment, filename])
-    result = ""
-    f = open(filename + ".pub", 'r')
-    f.each {|line| result += line}
-    f.close
     key = Hash.new
-    key[:result] = result
-    key[:name] = filename
+    Net::SSH.start(@host, @name, :password => @pass) do |ssh|
+      filename = name 
+      comment = "comment"
+      cmd = "ssh-keygen -q -t rsa -C '%s' -N '' -f %s >/dev/null && cat #{filename}.pub >> ~/.ssh/authorized_keys" %
+             [comment, filename]
+
+      ssh.exec cmd do |ch, stream, data|
+        if stream == :stderr
+          puts "ERROR: #{data}"
+        end
+        result = ""
+        f = open(filename + ".pub", 'r')
+        f.each {|line| result += line}
+        f.close
+        key[:result] = result
+        key[:name] = filename
+      end
+    end
     key
   end
 end

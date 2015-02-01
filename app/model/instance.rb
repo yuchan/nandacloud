@@ -16,8 +16,9 @@ migration "create instances table" do
   database.create_table :instances do
     primary_key :id
     string      :name
-    string      :instance_path, :null => false
+    string      :instance_path 
     string      :host_ip, :null => false
+    string      :guest_ip
     timestamp   :created, :null => false
     timestamp   :updated, :null => false
   end

@@ -12,6 +12,12 @@ get '/' do
   haml :index
 end
 
+post '/testssh' do
+  Dcmgr::ssh_connect
+  {:status => "ssh connected"}.to_json
+end
+
+
 get '/instances/:id' do
   @instance = Instance[params[:id]]
   if @instance == nil
@@ -23,11 +29,6 @@ end
 
 get '/instances' do
   Instance.to_json
-end
-
-post '/testssh' do
-  Dcmgr::ssh_connect
-  {:status => "ssh connected"}.to_json
 end
 
 post '/instances/:name' do
@@ -44,18 +45,6 @@ post '/instances/:name' do
   { status: 'instance created' }.to_json
 end
 
-post '/containers/:name' do
-  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
-  data = dm.launch_vm(params[:name])
-  Instance.create(
-  {
-    name: params[:name],
-    host_ip: '192.168.33.25',
-    created: Time.now,
-    updated: Time.now
-  })
-  { status: 'container created' }.to_json
-end
 
 delete '/instances/:id' do
   dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
@@ -87,15 +76,18 @@ get '/sshkeys' do
 end
 
 post '/sshkeys' do
-  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
-  info = dm.generate_key('test')
+  dm = Dcmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  info = dm.generate_key('test2')
   Sshkey.create(
   {
-    name: 'test',
+    name: 'test2',
     public_key: info[:result],
     created: Time.now,
     updated: Time.now
   })
+  
+  puts info
+
   send_file "./#{info[:name]}", filename: info[:name], disposition: :attachment
 end
 
@@ -112,3 +104,18 @@ delete '/sshkeys/:id' do
     { status: 'no sshkey' }.to_json
   end
 end
+
+post '/containers/:name' do
+  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  data = dm.launch_vm(params[:name])
+  Instance.create(
+  {
+    name: params[:name],
+    host_ip: '192.168.33.25',
+    guest_ip: data[:ip],
+    created: Time.now,
+    updated: Time.now
+  })
+  { status: 'container created' }.to_json
+end
+
