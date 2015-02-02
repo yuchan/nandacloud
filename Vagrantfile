@@ -2,7 +2,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define :dcmgr do | dcmgr |
-    config.vm.box = "chef/centos-7.0"
+    dcmgr.vm.box = "chef/centos-7.0"
     dcmgr.vm.hostname = "dcmgr"
     dcmgr.vm.network :private_network, ip: "192.168.33.20"
     dcmgr.vm.provision 'chef_solo' do | chef |
@@ -20,8 +20,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   }
 
   nodes.each do |key, value|
-    config.vm.box = "chef/centos-7.0"
     config.vm.define key do | dcnode |
+      dcnode.vm.box = "chef/centos-7.0"
       dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 
@@ -42,8 +42,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   }
 
   lxc_nodes.each do |key, value|
-    config.vm.box = "ubuntu/trusty64"
     config.vm.define key do | dcnode |
+      dcnode.vm.box = "ubuntu/trusty64"
       dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 

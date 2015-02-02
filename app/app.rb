@@ -80,15 +80,15 @@ post '/sshkeys' do
   info = dm.generate_key('test2')
   Sshkey.create(
   {
-    name: 'test2',
+    name: info[:name],
     public_key: info[:result],
     created: Time.now,
     updated: Time.now
   })
   
   puts info
-
-  send_file "./#{info[:name]}", filename: info[:name], disposition: :attachment
+  File.open("./out.txt", 'w') {|f| f.write(info[:result]) }
+  send_file "./out.txt", filename: info[:name], disposition: :attachment
 end
 
 put '/sshkeys/:id' do

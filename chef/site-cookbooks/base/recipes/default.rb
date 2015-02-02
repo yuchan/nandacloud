@@ -7,7 +7,7 @@
 # All rights reserved - Do Not Redistribute
 #
 
-%w{gcc gcc-c++ make openssl-devel zlib-devel readline-devel libffi-devel}.each do |pkg|
+%w{gcc gcc-c++ make openssl-devel zlib-devel readline-devel libffi-devel autoconf}.each do |pkg|
    package pkg do
      action :install
    end

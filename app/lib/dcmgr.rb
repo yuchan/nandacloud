@@ -1,4 +1,5 @@
 require 'net/ssh'
+require 'digest/sha1'
 
 class Dcmgr
   attr_accessor :host, :name, :pass
@@ -44,24 +45,25 @@ class Dcmgr
 
   def generate_key(name)
     key = Hash.new
+    result = ""
+    filename = ""
     Net::SSH.start(@host, @name, :password => @pass) do |ssh|
-      filename = name 
+      filename = Digest::SHA1.hexdigest (name + Time.now.to_s)
       comment = "comment"
-      cmd = "ssh-keygen -q -t rsa -C '%s' -N '' -f %s >/dev/null && cat #{filename}.pub >> ~/.ssh/authorized_keys" %
+      cmd = "ssh-keygen -q -t rsa -C '%s' -N '' -f %s >/dev/null && cat #{filename}.pub >> ~/.ssh/authorized_keys && cat #{filename}" %
              [comment, filename]
 
       ssh.exec cmd do |ch, stream, data|
         if stream == :stderr
           puts "ERROR: #{data}"
+        else
+          puts data
+          result = data
         end
-        result = ""
-        f = open(filename + ".pub", 'r')
-        f.each {|line| result += line}
-        f.close
-        key[:result] = result
-        key[:name] = filename
       end
     end
+    key[:result] = result
+    key[:name] = filename
     key
   end
 end
