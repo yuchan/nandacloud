@@ -1,0 +1,16 @@
+%form{action:'http://172.16.33.2:4567/instances', method:'POST'}
+  %h1
+    Create new instance
+  name:
+  %input{type: 'text', name:'name'}
+  keypair:
+  %input{type:'text',name:'keypair'}
+  %input{type:'submit'}
+
+%form{action:'http://172.16.33.2:4567/instances', method:'POST'}
+  %h1
+    Delete instance
+  name:
+  %input{name:'name'}
+  %input{type:'submit'}
+  %input{type:'hidden', name:'_method', value:'DELETE'}

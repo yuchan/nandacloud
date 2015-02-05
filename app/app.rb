@@ -8,10 +8,21 @@ require './lib/ctnmgr'
 
 config_file 'config.yml'
 
+# GUI Console
+
 get '/' do
   haml :index
 end
 
+get '/instances' do
+  haml :instances
+end
+
+get '/sshkeys' do
+  haml :sshkeys
+end
+
+# JSON api
 post '/api/testssh' do
   Dcmgr::ssh_connect
   {:status => "ssh connected"}.to_json
