@@ -18,8 +18,66 @@ get '/instances' do
   haml :instances
 end
 
+post '/instances' do
+  @instance = Instance[:name => params[:name]]
+  if @instance
+    return "The name of instance was already used!"
+  end
+  @ip_list = Instance.select_map(:guest_ip)
+  new_guest_ip = ""
+  (10..200).each do |myhost|
+    if @ip_list.include?("172.16.33.#{myhost}") == false then
+      new_guest_ip = "172.16.33.#{myhost}"
+    end
+  end
+  #return @ip_list
+  if new_guest_ip == "" then
+    return "Sorry, IP address is exhausted."
+  end
+
+  dm = Dcmgr.new('172.16.33.2', 'dcmgr', 'dcmgr')
+  data = dm.launch_vm(params[:name], params[:keypair], new_guest_ip)
+  Instance.create({
+    name: params[:name],
+    host_ip: '172.16.33.3',
+    guest_ip: new_guest_ip,
+    instance_path: "",
+    created: Time.now,
+    updated: Time.now
+  })
+  #{ status: 'instance created',ip: new_guest_ip }.to_json
+  redirect to('/instances')
+end
+
+delete '/instances' do
+  @instance = Instance[:name => params[:name]]
+  if @instance
+    dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+    dm.remove_vm(@instance.name)
+    @instance.delete
+  end
+  redirect to('/instances')
+end
+
 get '/sshkeys' do
   haml :sshkeys
+end
+
+post '/sshkeys' do
+  @sshkey = Sshkey[:name => params[:filename]]
+  if @sshkey then
+    return "ssh key pair file was already created!"
+  end
+  dm = Dcmgr.new('172.16.33.2', 'dcmgr', 'dcmgr')
+  info = dm.generate_key(params[:filename])
+  Sshkey.create({
+    name: params[:filename],
+    public_key: info[:result],
+    created: Time.now,
+    updated: Time.now
+  })
+
+  send_file "/home/dcmgr/nandacloud/keys/#{info[:name]}.pem", filename: "#{info[:name]}.pem", disposition: :attachment
 end
 
 # JSON api
