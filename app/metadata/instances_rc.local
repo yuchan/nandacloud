@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+touch /var/lock/subsys/local
+mount LABEL=METADATA /metadata
+size=$(wc -c /home/nanda/.ssh/authorized_keys | awk '{print $1}')
+if [ $size -eq 0 ]; then
+  cat /metadata/pub.pub >> /home/nanda/.ssh/authorized_keys
+fi
+size=$(wc -c /etc/sysconfig/network-scripts/ifcfg-eth0 | awk '{print $1}')
+if [ $size -eq 0 ]; then
+  cp /metadata/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0
+fi
+service network restart

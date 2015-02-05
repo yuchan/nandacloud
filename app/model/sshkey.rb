@@ -12,6 +12,7 @@ migration "create sshkeys table" do
   database.create_table :sshkeys do
     primary_key :id
     string      :name
+    string      :secret_key
     string      :public_key
     timestamp   :created, :null => false
     timestamp   :updated, :null => false
