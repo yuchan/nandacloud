@@ -12,13 +12,13 @@ get '/' do
   haml :index
 end
 
-post '/testssh' do
+post '/api/testssh' do
   Dcmgr::ssh_connect
   {:status => "ssh connected"}.to_json
 end
 
 
-get '/instances/:id' do
+get '/api/instances/:id' do
   @instance = Instance[params[:id]]
   if @instance == nil
     {:status => "no instance"}.to_json
@@ -27,11 +27,11 @@ get '/instances/:id' do
   end
 end
 
-get '/instances' do
+get '/api/instances' do
   Instance.to_json
 end
 
-post '/instances/:name' do
+post '/api/instances/:name' do
   dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   data = dm.launch_vm(params[:name])
   Instance.create(
@@ -45,8 +45,7 @@ post '/instances/:name' do
   { status: 'instance created' }.to_json
 end
 
-
-delete '/instances/:id' do
+delete '/api/instances/:id' do
   dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
   @instance = Instance[params[:id]]
   if @instance
@@ -58,11 +57,11 @@ delete '/instances/:id' do
   end
 end
 
-put '/instances/:id' do
+put '/api/instances/:id' do
   'instances updated'.to_json
 end
 
-get '/sshkeys/:id' do
+get '/api/sshkeys/:id' do
   @sshkey = Sshkey[params[:id]]
   if @sshkey.nil?
     { status: 'no sshkey' }.to_json
@@ -71,11 +70,11 @@ get '/sshkeys/:id' do
   end
 end
 
-get '/sshkeys' do
+get '/api/sshkeys' do
   Sshkey.to_json
 end
 
-post '/sshkeys' do
+post '/api/sshkeys' do
   dm = Dcmgr.new('192.168.33.25', 'vagrant', 'vagrant')
   info = dm.generate_key('test2')
   Sshkey.create(
@@ -85,17 +84,16 @@ post '/sshkeys' do
     created: Time.now,
     updated: Time.now
   })
-  
-  puts info
+
   File.open("./out.txt", 'w') {|f| f.write(info[:result]) }
   send_file "./out.txt", filename: info[:name], disposition: :attachment
 end
 
-put '/sshkeys/:id' do
+put '/api/sshkeys/:id' do
 
 end
 
-delete '/sshkeys/:id' do
+delete '/api/sshkeys/:id' do
   @sshkey = Sshkey[params[:id]]
   if @sshkey
     @sshkey.delete
@@ -105,7 +103,7 @@ delete '/sshkeys/:id' do
   end
 end
 
-post '/containers/:name' do
+post '/api/containers/:name' do
   dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
   data = dm.launch_vm(params[:name])
   Instance.create(
@@ -118,4 +116,3 @@ post '/containers/:name' do
   })
   { status: 'container created' }.to_json
 end
-
