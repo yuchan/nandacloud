@@ -13,14 +13,14 @@ Prepare Vagrant
 ### vagrant --version
 
     Vagrant 1.7.2
-
+    
 ### vagrant plugin list
 
     vagrant-omnibus (1.4.1)
     vagrant-share (1.1.3, system)
     vagrant-vbguest (0.10.0)
     vagrant-vbox-snapshot (0.0.8)
-
+    vagrant-vmware-fusion (3.2.0)
 
 ### Gem install
 
