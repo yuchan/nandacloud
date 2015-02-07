@@ -185,3 +185,26 @@ post '/api/containers/:name' do
   })
   { status: 'container created' }.to_json
 end
+
+get '/api/containers/:id/start' do
+  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  @container = Instance[params[:id]]
+  data = dm.start_vm(@container.name)
+  { status: 'container started' }.to_json
+end
+
+get '/api/containers/:id/stop' do
+  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  @container = Instance[params[:id]]
+  puts @container.inspect
+  data = dm.stop_vm(@container.name)
+  { status: 'container stopped' }.to_json
+end
+
+get '/api/containers/:id/destroy' do
+  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  @container = Instance[params[:id]]
+  data = dm.destroy_vm(@container.name)
+  @container.delete
+  { status: 'container deleted' }.to_json
+end

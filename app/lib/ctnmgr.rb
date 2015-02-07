@@ -24,7 +24,17 @@ class Ctnmgr
     {ip: result}
   end
 
-  def stop_vm(name, path)
+  def start_vm(name)
+    Net::SSH.start(@host, @name, :password => @pass) do |ssh|
+      ssh.exec makecommand(["sudo lxc-start -n #{name} -d"]) do |ch, stream, data|
+        if stream == :stderr
+          puts "ERROR: #{data}"
+        end
+      end
+    end
+  end
+
+  def stop_vm(name)
     Net::SSH.start(@host, @name, :password => @pass) do |ssh|
       ssh.exec makecommand(["sudo lxc-stop -n #{name}"]) do |ch, stream, data|
         if stream == :stderr
@@ -34,7 +44,7 @@ class Ctnmgr
     end
   end
 
-  def remove_vm(name, path)
+  def destroy_vm(name)
     Net::SSH.start(@host, @name, :password => @pass) do |ssh|
       ssh.exec makecommand(["sudo lxc-destroy -n #{name}"]) do |ch, stream, data|
         if stream == :stderr
