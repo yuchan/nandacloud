@@ -201,7 +201,7 @@ get '/api/containers/:id/stop' do
   { status: 'container stopped' }.to_json
 end
 
-get '/api/containers/:id/destroy' do
+delete '/api/containers/:id' do
   dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
   @container = Instance[params[:id]]
   data = dm.destroy_vm(@container.name)
