@@ -1,3 +1,13 @@
-%form{method:'POST', action:'http://172.16.33.2:4567/sshkeys'}
-  %input{type:'text', name:'filename'}
-  %input{type:'submit'}
+.keylist
+  %h2
+    Key List
+  %ul
+    - keys.each do |key|
+      %li
+        %a
+          = key[:name]
+
+%form{method:'POST', action:'/sshkeys'}
+  %h1
+    Create new keypair.
+  %input{type:'submit', value:'generate'}

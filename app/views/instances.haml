@@ -1,16 +1,40 @@
-%form{action:'http://172.16.33.2:4567/instances', method:'POST'}
-  %h1
-    Create new instance
-  name:
-  %input{type: 'text', name:'name'}
-  keypair:
-  %input{type:'text',name:'keypair'}
-  %input{type:'submit'}
+.wrap
+  %p
+    %span= start_ip
+    %span
+      \~
+    %span= end_ip
 
-%form{action:'http://172.16.33.2:4567/instances', method:'POST'}
-  %h1
-    Delete instance
-  name:
-  %input{name:'name'}
-  %input{type:'submit'}
-  %input{type:'hidden', name:'_method', value:'DELETE'}
+  %form{action:'/instances', method:'POST'}
+    %h1
+      Create new instance
+    name:
+    %input{type: 'text', name:'name'}
+    keypair:
+    %input{type:'text',name:'keypair'}
+    %input{type:'submit'}
+    %input{type:'hidden',name:'operation',value:'create'}
+
+  %form{action:'/instances', method:'POST'}
+    %h1
+      Start instance
+    name:
+    %input{type: 'text', name:'name'}
+    %input{type:'submit'}
+    %input{type:'hidden',name:'operation',value:'start'}
+
+  %form{action:'/instances', method:'POST'}
+    %h1
+      Stop instance
+    name:
+    %input{type: 'text', name:'name'}
+    %input{type:'submit'}
+    %input{type:'hidden',name:'operation',value:'stop'}
+
+  %form{action:'/instances', method:'POST'}
+    %h1
+      Delete instance
+    name:
+    %input{name:'name'}
+    %input{type:'submit'}
+    %input{type:'hidden', name:'_method', value:'DELETE'}

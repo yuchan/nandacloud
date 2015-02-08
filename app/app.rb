@@ -8,89 +8,219 @@ require './lib/ctnmgr'
 
 config_file 'config.yml'
 
-# GUI Console
+# Common
+class CommonUtil
+  def self.sshkeygenerate
+    info = Dcmgr.generate_key()
+    Sshkey.create(
+      name: info[:name],
+      public_key: info[:result],
+      created: Time.now,
+      updated: Time.now
+    )
+    info
+  end
+
+  def self.createinstance(instance_name, key_name)
+    success = ''
+    message = ''
+    @instance = Instance[name: instance_name]
+    if @instance
+      success = 'ok'
+      message =  'The name of instance you entered was already used!'
+    else
+      @ip_list = Instance.select_map(:guest_ip)
+      new_guest_ip = ''
+      fips = settings.iprange_start.split('.')
+      eips = settings.iprange_end.split('.')
+      (fips[-1].to_i..eips[-1].to_i).each do |myhost|
+        if @ip_list.include?("#{fips[0]}.#{fips[1]}.#{fips[2]}.#{myhost}") == false
+          new_guest_ip = "#{eips[0]}.#{eips[1]}.#{eips[2]}.#{myhost}"
+        end
+      end
+
+      if new_guest_ip == ''
+        success = 'ng'
+        message = 'Sorry, IP address is exhausted.'
+      else
+        @host_ip_list = {}
+        settings.nodes.each do |node|
+          @host_ip_list[node] = 0
+        end
+        @using_hosts = Instance.select_map(:host_ip)
+        @using_hosts.each do |ip|
+          @host_ip_list[ip] += 1
+        end
+        min = -1
+        host_ip = ''
+        @host_ip_list.each do |k, v|
+          if  min > v || min == -1
+            min = v
+            host_ip = k
+          end
+        end
+
+        Instance.create(
+          name: params[:name],
+          host_ip: host_ip,
+          guest_ip: new_guest_ip,
+          instance_path: '',
+          created: Time.now,
+          updated: Time.now
+        )
+
+        dm = Dcmgr.new(host_ip, 'dcmgr', 'dcmgr')
+        nodepath = "~/SeedInstances/centos.img"
+        @sshkey = Sshkeys[name: key_name]
+        dm.launch_vm(instance_name, @sshkey.public_key, new_guest_ip, host_ip)
+        name = params[:name]
+        success = 'ok'
+        message = "The #{name} instance was created successfully.<br>You can access nanda@#{new_guest_ip} via your ssh console window by using the ssh-keypair file."
+      end
+    end
+
+    result = {
+      status: success,
+      message: message
+    }
+    result
+  end
+
+  def self.startinstance(instance_name)
+    success = ''
+    message = ''
+    @instance = Instance[name: instance_name]
+    if @instance
+      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm.start_vm(@instance.name)
+      success = 'ok'
+      message = "instance #{instance_name} started."
+    else
+      success = 'ng'
+      message = 'Couldn\'t find instance name.'
+    end
+
+    result = {
+      status: success,
+      message: message
+    }
+    result
+  end
+
+  def self.stopinstance(instance_name)
+    success = ''
+    message = ''
+    @instance = Instance[name: instance_name]
+    if @instance
+      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm.start_vm(@instance.name)
+      success = 'ok'
+      message = "instance #{instance_name} started."
+    else
+      success = 'ng'
+      message = 'Couldn\'t find instance name.'
+    end
+    result = {
+      status: success,
+      message: message
+    }
+    result
+  end
+
+  def self.deleteinstance(instance_name)
+    success = ''
+    message = ''
+    @instance = Instance[name: instance_name]
+    if @instance
+      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm.remove_vm(@instance.name)
+      @instance.delete
+    end
+
+    success = 'ok'
+    message = 'deleted successfully'
+
+    result = {
+      status: succss,
+      message: message
+    }
+    result
+  end
+end
+
+=begin
+ GUI Console
+=end
 
 get '/' do
-  haml :index
+  haml :index, locals: {
+    message: ''
+  }
 end
 
 get '/instances' do
-  haml :instances
+  @message = ''
+  @start_ip = settings.iprange_start
+  @end_ip = settings.iprange_end
+  haml :instances, locals: {
+    message: '',
+    start_ip: settings.iprange_start,
+    end_ip: settings.iprange_end
+  }
 end
 
 post '/instances' do
-  @instance = Instance[:name => params[:name]]
-  if @instance
-    return "The name of instance was already used!"
-  end
-  @ip_list = Instance.select_map(:guest_ip)
-  new_guest_ip = ""
-  (10..200).each do |myhost|
-    if @ip_list.include?("172.16.33.#{myhost}") == false then
-      new_guest_ip = "172.16.33.#{myhost}"
-    end
-  end
-  #return @ip_list
-  if new_guest_ip == "" then
-    return "Sorry, IP address is exhausted."
+  message = ''
+
+  if params[:operation] == 'create'
+    result = CommonUtil.createinstance(params[:name], params[:keyname])
+  elsif params[:operation] == 'start'
+    result = CommonUtil.startinstance(params[:name])
+  elsif params[:operation] == "stop"
+    result = CommonUtil.stopinstance(params[:name])
   end
 
-  dm = Dcmgr.new('172.16.33.2', 'dcmgr', 'dcmgr')
-  data = dm.launch_vm(params[:name], params[:keypair], new_guest_ip)
-  Instance.create({
-    name: params[:name],
-    host_ip: '172.16.33.3',
-    guest_ip: new_guest_ip,
-    instance_path: "",
-    created: Time.now,
-    updated: Time.now
-  })
-  #{ status: 'instance created',ip: new_guest_ip }.to_json
-  redirect to('/instances')
+  haml :instances, locals: {
+    message: result[:message],
+    start_ip: settings.iprange_start,
+    end_ip: settings.iprange_end
+  }
 end
 
 delete '/instances' do
-  @instance = Instance[:name => params[:name]]
-  if @instance
-    dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
-    dm.remove_vm(@instance.name)
-    @instance.delete
-  end
+  CommonUtil.deleteinstance(params[:name])
   redirect to('/instances')
 end
 
 get '/sshkeys' do
-  haml :sshkeys
+  @keys = Sshkey.all
+  haml :sshkeys, locals: {
+    message: '',
+    keys: @keys
+  }
 end
 
 post '/sshkeys' do
-  @sshkey = Sshkey[:name => params[:filename]]
-  if @sshkey then
-    return "ssh key pair file was already created!"
-  end
-  dm = Dcmgr.new('172.16.33.2', 'dcmgr', 'dcmgr')
-  info = dm.generate_key(params[:filename])
-  Sshkey.create({
-    name: params[:filename],
-    public_key: info[:result],
-    created: Time.now,
-    updated: Time.now
-  })
-
-  send_file "/home/dcmgr/nandacloud/keys/#{info[:name]}.pem", filename: "#{info[:name]}.pem", disposition: :attachment
+  info = CommonUtil.sshkeygenerate
+  # Use services like S3 or cloudfront in the future??
+  send_file "/tmp/#{info[:name]}.pem", filename: "#{info[:name]}.pem", disposition: :attachment
 end
 
-# JSON api
+=begin
+  JSON api
+=end
+
 post '/api/testssh' do
-  Dcmgr::ssh_connect
-  {:status => "ssh connected"}.to_json
+  Dcmgr.ssh_connect
+  { status: 'ssh connected' }.to_json
 end
 
+#Instance API
 
 get '/api/instances/:id' do
   @instance = Instance[params[:id]]
-  if @instance == nil
-    {:status => "no instance"}.to_json
+  if @instance.nil?
+    { status: 'no instance' }.to_json
   else
     @instance.to_json
   end
@@ -100,35 +230,21 @@ get '/api/instances' do
   Instance.to_json
 end
 
-post '/api/instances/:name' do
-  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
-  data = dm.launch_vm(params[:name])
-  Instance.create(
-  {
-    name: params[:name],
-    host_ip: '192.168.33.21',
-    instance_path: data[:instance_path],
-    created: Time.now,
-    updated: Time.now
-  })
-  { status: 'instance created' }.to_json
+post '/api/instances/' do
+  result = CommonUtil.createinstance
+  result.to_json
 end
 
 delete '/api/instances/:id' do
-  dm = Dcmgr.new('192.168.33.21', 'vagrant', 'vagrant')
-  @instance = Instance[params[:id]]
-  if @instance
-    dm.remove_vm(@instance.name, @instance.instance_path)
-    @instance.delete
-    { status: 'instance removed' }.to_json
-  else
-    { status: 'no instance' }.to_json
-  end
+  result = CommonUtil.deleteinstance
+  result.to_json
 end
 
 put '/api/instances/:id' do
   'instances updated'.to_json
 end
+
+# SSHKey API
 
 get '/api/sshkeys/:id' do
   @sshkey = Sshkey[params[:id]]
@@ -144,18 +260,9 @@ get '/api/sshkeys' do
 end
 
 post '/api/sshkeys' do
-  dm = Dcmgr.new('192.168.33.25', 'vagrant', 'vagrant')
-  info = dm.generate_key('test2')
-  Sshkey.create(
-  {
-    name: info[:name],
-    public_key: info[:result],
-    created: Time.now,
-    updated: Time.now
-  })
-
-  File.open("./out.txt", 'w') {|f| f.write(info[:result]) }
-  send_file "./out.txt", filename: info[:name], disposition: :attachment
+  info = sshkeygenerate
+  # Use services like S3 or cloudfront in the future??
+  send_file "/tmp/#{info[:name]}.pem", filename: "#{info[:name]}.pem", disposition: :attachment
 end
 
 put '/api/sshkeys/:id' do
@@ -171,6 +278,8 @@ delete '/api/sshkeys/:id' do
     { status: 'no sshkey' }.to_json
   end
 end
+
+# Container API
 
 post '/api/containers/:name' do
   dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')

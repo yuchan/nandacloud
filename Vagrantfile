@@ -2,9 +2,10 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define :dcmgr do | dcmgr |
-    dcmgr.vm.box = "chef/centos-7.0"
+    dcmgr.vm.box = "hashicorp/precise64"
     dcmgr.vm.hostname = "dcmgr"
     dcmgr.vm.network :private_network, ip: "192.168.33.20"
+    dcmgr.vm.synced_folder "app/", "/srv/app"
     dcmgr.vm.provision 'chef_solo' do | chef |
       chef.cookbooks_path = ["./chef/cookbooks", "./chef/site-cookbooks"]
       chef.roles_path = "./chef/roles"
@@ -21,7 +22,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   nodes.each do |key, value|
     config.vm.define key do | dcnode |
-      dcnode.vm.box = "chef/centos-7.0"
+      dcnode.vm.box = "hashicorp/precise64"
       dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 
@@ -57,4 +58,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
     end
   end
+
+  config.omnibus.chef_version = :latest
 end
