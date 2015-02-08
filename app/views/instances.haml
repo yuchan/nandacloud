@@ -1,4 +1,31 @@
 .wrap
+  .current_instances
+    %h2
+      Current Instances
+    %table.table
+      %tr
+        %th
+          name
+        %th
+          host machine ip
+        %th
+          guest machine ip
+        %th
+          status
+        %th
+          last update
+      - instances.each do |instance|
+        %tr
+          %td
+            = instance.name
+          %td
+            = instance.host_ip
+          %td
+            = instance.guest_ip
+          %td
+            = instance.status
+          %td
+            = instance.updated
   %p
     %span= start_ip
     %span
@@ -6,7 +33,7 @@
     %span= end_ip
 
   %form{action:'/instances', method:'POST'}
-    %h1
+    %h2
       Create new instance
     name:
     %input{type: 'text', name:'name'}
@@ -19,7 +46,7 @@
     %input{type:'hidden',name:'operation',value:'create'}
 
   %form{action:'/instances', method:'POST'}
-    %h1
+    %h2
       Start instance
     name:
     %input{type: 'text', name:'name'}
@@ -27,7 +54,7 @@
     %input{type:'hidden',name:'operation',value:'start'}
 
   %form{action:'/instances', method:'POST'}
-    %h1
+    %h2
       Stop instance
     name:
     %input{type: 'text', name:'name'}
@@ -35,7 +62,7 @@
     %input{type:'hidden',name:'operation',value:'stop'}
 
   %form{action:'/instances', method:'POST'}
-    %h1
+    %h2
       Delete instance
     name:
     %input{name:'name'}

@@ -8,9 +8,17 @@
 #
 #
 
+case node["platform"]
+when "debian", "ubuntu"
+%w{qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils}.each do |pkg|
+ package pkg do
+   action :install
+ end
+end
+when "redhat", "centos", "fedora"
 %w{qemu-kvm libvirt virt-install virt-viewer bridge-utils}.each do |pkg|
-    package pkg do
-        action :install
-    end
+  package pkg do
+    action :install
+  end
 end
 
