@@ -18,13 +18,13 @@ class Dcmgr
   end
 
   def launch_vm(name, nodepath, metadata, publickey, new_ip, host_ip)
-    dcnode = "dcnode@#{host_ip}"
+    dcnode = "#{@name}@#{host_ip}"
     cmds = [
       'mkdir -p ~/md_mount',
       "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee ~/md_mount/ifcfg-eth0",
-      "sudo echo #{publickey} md_mount/pub.pub",
+      "sudo echo #{publickey} > md_mount/pub.pub",
       'sync',
-      "scp ~/nandacloud/metadata_drive #{dcnode}:~/vm/#{name}.img.metadata",
+      "scp #{metadata} #{dcnode}:~/vm/#{name}.img.metadata",
       "scp #{nodepath} #{dcnode}:~/vm/#{name}.img",
     ]
     system(cmds.join(' && '))
