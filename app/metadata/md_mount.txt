@@ -1,9 +1,9 @@
 #!/bin/bash
 
-/usr/bin/truncate -s 10m /home/dcmgr/nandacloud/metadata_drive;sync;
-parted /home/dcmgr/nandacloud/metadata_drive < /home/dcmgr/parted_procedure.txt
-kpartx -av /home/dcmgr/nandacloud/metadata_drive
+/usr/bin/truncate -s 10m /tmp/metadata_drive;sync;
+# app is placed in /srv/app
+parted /tmp/metadata_drive < /srv/app/metadata/parted_procedure.txt
+kpartx -av /tmp/metadata_drive
 udevadm settle
 mkfs -t vfat -n METADATA /dev/mapper/loop0p1
-mount -t vfat /dev/mapper/loop0p1 /home/dcmgr/md_mount
-
+mount -t vfat /dev/mapper/loop0p1 /tmp/md_mount

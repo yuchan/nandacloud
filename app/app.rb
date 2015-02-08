@@ -7,6 +7,7 @@ require './lib/dcmgr'
 require './lib/ctnmgr'
 
 config_file 'config.yml'
+enable :sessions
 
 # Common
 class CommonUtil
@@ -76,6 +77,7 @@ class CommonUtil
         Instance.create(
           name: instance_name,
           host_ip: host_ip,
+          status: 'running',
           guest_ip: new_guest_ip,
           instance_path: '',
           created: Time.now,
@@ -105,6 +107,8 @@ class CommonUtil
     if @instance
       dm = Dcmgr.new(@instance[:host_ip], user, pass)
       dm.start_vm(@instance.name)
+      @instance.status = 'running'
+      @instance.save
       success = 'ok'
       message = "instance #{instance_name} started."
     else
@@ -125,9 +129,11 @@ class CommonUtil
     @instance = Instance[name: instance_name]
     if @instance
       dm = Dcmgr.new(@instance[:host_ip], user, pass)
-      dm.start_vm(@instance.name)
+      dm.stop_vm(@instance.name)
+      @instance.status = 'stopped'
+      @instance.save
       success = 'ok'
-      message = "instance #{instance_name} started."
+      message = "instance #{instance_name} stopped."
     else
       success = 'ng'
       message = 'Couldn\'t find instance name.'
@@ -176,8 +182,13 @@ get '/instances' do
   @end_ip = settings.iprange_end
   @instances = Instance.all
   @sshkeys = Sshkey.all
+  if session[:message]
+    @message = session[:message]
+    session[:message] = nil
+  end
+
   haml :instances, locals: {
-    message: '',
+    message: @message,
     instances: @instances,
     sshkeys: @sshkeys,
     start_ip: settings.iprange_start,
@@ -198,6 +209,9 @@ post '/instances' do
     result = CommonUtil.stopinstance(params[:name], settings.user, settings.pass)
   end
 
+  session[:message] = result[:message]
+  redirect to('/instances')
+=begin
   @instances = Instance.all
   @sshkeys = Sshkey.all
   haml :instances, locals: {
@@ -207,10 +221,12 @@ post '/instances' do
     start_ip: settings.iprange_start,
     end_ip: settings.iprange_end
   }
+=end
 end
 
 delete '/instances' do
-  CommonUtil.deleteinstance(params[:name], settings.user, settings.pass)
+  result = CommonUtil.deleteinstance(params[:name], settings.user, settings.pass)
+  session[:message] = result[:message]
   redirect to('/instances')
 end
 

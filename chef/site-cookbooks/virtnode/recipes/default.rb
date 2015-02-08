@@ -10,7 +10,7 @@
 
 case node["platform"]
 when "debian", "ubuntu"
-%w{qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils}.each do |pkg|
+%w{qemu-kvm libvirt-bin ubuntu-vm-builder virtinst virt-viewer bridge-utils}.each do |pkg|
  package pkg do
    action :install
  end
@@ -21,4 +21,4 @@ when "redhat", "centos", "fedora"
     action :install
   end
 end
-
+end
