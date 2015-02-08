@@ -4,6 +4,8 @@
 # You can put your own initialization stuff in here if you don't
 # want to do the full Sys V style init stuff.
 
+# 種イメージに仕込んでおく起動スクリプト
+
 touch /var/lock/subsys/local
 mount LABEL=METADATA /metadata
 size=$(wc -c /home/nanda/.ssh/authorized_keys | awk '{print $1}')

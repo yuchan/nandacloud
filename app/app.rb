@@ -7,7 +7,10 @@ require './lib/dcmgr'
 require './lib/ctnmgr'
 
 config_file 'config.yml'
-enable :sessions
+use Rack::Session::Cookie, :key => 'rack.session',
+                           :path => '/',
+                           :expire_after => 86400, # In seconds
+                           :secret => ENV['NANDA_SECRET']
 
 # Common
 class CommonUtil
@@ -57,7 +60,6 @@ class CommonUtil
         message = 'Sorry, IP address is exhausted.'
       else
         @host_ip_list = {}
-        puts host_ips
         host_ips.each do |node|
           @host_ip_list[node] = 0
         end
@@ -85,8 +87,8 @@ class CommonUtil
         )
 
         dm = Dcmgr.new(host_ip, user, pass)
-        nodepath = '~/SeedInstances/centos.img'
-        dm.launch_vm(instance_name, nodepath, metadata_dir, public_key, new_guest_ip, host_ip)
+        nodepath = ENV['HOME'] + '/SeedInstances/centos.img'
+        dm.launch_vm(instance_name, nodepath, metadata_dir, public_key, new_guest_ip)
         name = instance_name
         success = 'ok'
         message = "The #{name} instance was created successfully.<br>You can access nanda@#{new_guest_ip} via your ssh console window by using the ssh-keypair file."
@@ -200,7 +202,6 @@ post '/instances' do
   message = ''
 
   if params[:operation] == 'create'
-    puts params[:keypair]
     @sshkey = Sshkey[params[:keypair]]
     result = CommonUtil.createinstance(params[:name], @sshkey.public_key, settings.metadata_dir, settings.iprange_start.split('.'), settings.iprange_end.split('.'), settings.nodes, settings.user, settings.pass)
   elsif params[:operation] == 'start'
@@ -270,7 +271,7 @@ end
 
 post '/api/instances/:name/:keypair' do
   @sshkey = Sshkey[params[:keypair]]
-  result = CommonUtil.createinstance(params[:name], @sshkey.public_key, settings.metadata_dir, settings.iprange_start.split('.'), settings.iprange_end.split('.'), settings.nodes)
+  result = CommonUtil.createinstance(params[:name], @sshkey.public_key, settings.metadata_dir, settings.iprange_start.split('.'), settings.iprange_end.split('.'), settings.nodes, settings.user, settings.pass)
   result.to_json
 end
 
@@ -344,7 +345,6 @@ end
 get '/api/containers/:id/stop' do
   dm = Ctnmgr.new(settings.lxcnodes.first, settings.user, settings.pass)
   @container = Instance[params[:id]]
-  puts @container.inspect
   dm.stop_vm(@container.name)
   { status: 'container stopped' }.to_json
 end

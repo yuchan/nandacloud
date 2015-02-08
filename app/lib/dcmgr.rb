@@ -17,20 +17,18 @@ class Dcmgr
     end
   end
 
-  def launch_vm(name, nodepath, metadata, publickey, new_ip, host_ip)
-    dcnode = "#{@name}@#{host_ip}"
-    cmds = [
-      'mkdir -p /tmp/md_mount',
-      "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee /tmp/md_mount/ifcfg-eth0",
-      "echo #{publickey} > /tmp/md_mount/pub.pub",
-      'sync',
-      "scp #{metadata} #{dcnode}:~/vm/#{name}.img.metadata",
-      "scp #{nodepath} #{dcnode}:~/vm/#{name}.img",
-    ]
-    system(cmds.join(' && '))
-    Net::SSH.start(host_ip, @name, password: @pass) do |ssh|
+  def launch_vm(name, nodepath, metadata, publickey, new_ip)
+    Net::SSH.start(@host, @name, password: @pass) do |ssh|
       cmds = [
-        "sudo virt-install --name #{name} --ram 512 --disk ~/vm/#{name}.img,format=qcow2 --disk ~/vm/#{name}.img.metadata --network bridge=br0 --vnc --noautoconsole --import"
+        'mkdir -p /tmp/md_mount',
+        "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee /tmp/md_mount/ifcfg-eth0",
+        "echo #{publickey} > /tmp/md_mount/pub.pub",
+        'sync',
+        'sudo bash /vagrant/app/metadata/md_mount.bash',
+        "cp #{nodepath} ~/vm/#{name}.img",
+        "sudo virt-install --name #{name} --ram 512 --disk ~/vm/#{name}.img,format=qcow2 --network bridge=br0 --vnc --noautoconsole --import",
+        'sudo bash /vagrant/app/metadata/md_umount.bash',
+        'rm -rf /tmp/md_mount'
       ]
       ssh.exec cmds.join(' && ') do |_ch, stream, data|
         if stream == :stderr

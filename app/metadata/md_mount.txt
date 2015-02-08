@@ -1,9 +1,0 @@
-#!/bin/bash
-
-/usr/bin/truncate -s 10m /tmp/metadata_drive;sync;
-# app is placed in /srv/app
-parted /tmp/metadata_drive < /srv/app/metadata/parted_procedure.txt
-kpartx -av /tmp/metadata_drive
-udevadm settle
-mkfs -t vfat -n METADATA /dev/mapper/loop0p1
-mount -t vfat /dev/mapper/loop0p1 /tmp/md_mount
