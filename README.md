@@ -1,3 +1,8 @@
+Memo
+===============
+
+https://help.ubuntu.com/community/KVM/Installation
+
 Nandacloud
 ===============
 

@@ -84,7 +84,7 @@ class Ctnmgr
 
   def makecommand(cmds)
     c = []
-    c.push 'mkdir -p /home/#{@name}/golib'
+    c.push 'mkdir -p ~/golib'
     c.push 'export GOROOT=/usr/local/go'
     c.push 'export GOPATH=/home/#{@name}/golib'
     c.push 'export PATH=$PATH:/usr/local/go/bin'

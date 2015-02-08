@@ -11,7 +11,10 @@
     name:
     %input{type: 'text', name:'name'}
     keypair:
-    %input{type:'text',name:'keypair'}
+    %select{name:'keypair'}
+      - sshkeys.each do |key|
+        %option{value:key.id}
+          = key.name
     %input{type:'submit'}
     %input{type:'hidden',name:'operation',value:'create'}
 

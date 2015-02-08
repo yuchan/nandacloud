@@ -17,22 +17,23 @@ class Dcmgr
     end
   end
 
-  def launch_vm(name, nodepath, publickey, new_ip, host_ip)
+  def launch_vm(name, nodepath, metadata, publickey, new_ip, host_ip)
     dcnode = "dcnode@#{host_ip}"
     cmds = [
-        "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee ~/md_mount/ifcfg-eth0",
-        "sudo echo #{publickey} md_mount/pub.pub",
-        "sync",
-        "scp ~/nandacloud/metadata_drive #{dcnode}:~/vm/#{name}.img.metadata",
-        "scp #{nodepath} #{dcnode}:~/vm/#{name}.img",
+      'mkdir -p ~/md_mount',
+      "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee ~/md_mount/ifcfg-eth0",
+      "sudo echo #{publickey} md_mount/pub.pub",
+      'sync',
+      "scp ~/nandacloud/metadata_drive #{dcnode}:~/vm/#{name}.img.metadata",
+      "scp #{nodepath} #{dcnode}:~/vm/#{name}.img",
     ]
-    system(cmds.join(" && "))
-    Net::SSH.start(host_ip, "dcnode", :password => "dcnode") do |ssh|
+    system(cmds.join(' && '))
+    Net::SSH.start(host_ip, @name, password: @pass) do |ssh|
       cmds = [
         "sudo virt-install --name #{name} --ram 512 --disk ~/vm/#{name}.img,format=qcow2 --disk ~/vm/#{name}.img.metadata --network bridge=br0 --vnc --noautoconsole --import"
       ]
-      ssh.exec cmds.join(" && ") do |ch, stream, data|
-        if stream == :stderr then
+      ssh.exec cmds.join(' && ') do |_ch, stream, data|
+        if stream == :stderr
           puts "ERROR: #{data}"
         end
       end

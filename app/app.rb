@@ -11,7 +11,7 @@ config_file 'config.yml'
 # Common
 class CommonUtil
   def self.sshkeygenerate
-    info = Dcmgr.generate_key()
+    info = Dcmgr.generate_key
     Sshkey.create(
       name: info[:name],
       public_key: info[:result],
@@ -21,7 +21,19 @@ class CommonUtil
     info
   end
 
-  def self.createinstance(instance_name, key_name)
+  def self.sshkeyremove(id)
+    @sshkey = Sshkey[id]
+    if @sshkey
+      Dcmgr.remove_key(name)
+      @sshkey.delete
+      true
+    else
+      false
+      { status: 'no sshkey' }.to_json
+    end
+  end
+
+  def self.createinstance(instance_name, public_key, metadata_dir, start_ip, end_ip, host_ips, user, pass)
     success = ''
     message = ''
     @instance = Instance[name: instance_name]
@@ -31,8 +43,8 @@ class CommonUtil
     else
       @ip_list = Instance.select_map(:guest_ip)
       new_guest_ip = ''
-      fips = settings.iprange_start.split('.')
-      eips = settings.iprange_end.split('.')
+      fips = start_ip
+      eips = end_ip
       (fips[-1].to_i..eips[-1].to_i).each do |myhost|
         if @ip_list.include?("#{fips[0]}.#{fips[1]}.#{fips[2]}.#{myhost}") == false
           new_guest_ip = "#{eips[0]}.#{eips[1]}.#{eips[2]}.#{myhost}"
@@ -44,7 +56,8 @@ class CommonUtil
         message = 'Sorry, IP address is exhausted.'
       else
         @host_ip_list = {}
-        settings.nodes.each do |node|
+        puts host_ips
+        host_ips.each do |node|
           @host_ip_list[node] = 0
         end
         @using_hosts = Instance.select_map(:host_ip)
@@ -61,7 +74,7 @@ class CommonUtil
         end
 
         Instance.create(
-          name: params[:name],
+          name: instance_name,
           host_ip: host_ip,
           guest_ip: new_guest_ip,
           instance_path: '',
@@ -69,11 +82,10 @@ class CommonUtil
           updated: Time.now
         )
 
-        dm = Dcmgr.new(host_ip, 'dcmgr', 'dcmgr')
-        nodepath = "~/SeedInstances/centos.img"
-        @sshkey = Sshkeys[name: key_name]
-        dm.launch_vm(instance_name, @sshkey.public_key, new_guest_ip, host_ip)
-        name = params[:name]
+        dm = Dcmgr.new(host_ip, user, pass)
+        nodepath = '~/SeedInstances/centos.img'
+        dm.launch_vm(instance_name, nodepath, metadata_dir, public_key, new_guest_ip, host_ip)
+        name = instance_name
         success = 'ok'
         message = "The #{name} instance was created successfully.<br>You can access nanda@#{new_guest_ip} via your ssh console window by using the ssh-keypair file."
       end
@@ -86,12 +98,12 @@ class CommonUtil
     result
   end
 
-  def self.startinstance(instance_name)
+  def self.startinstance(instance_name, user, pass)
     success = ''
     message = ''
     @instance = Instance[name: instance_name]
     if @instance
-      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm = Dcmgr.new(@instance[:host_ip], user, pass)
       dm.start_vm(@instance.name)
       success = 'ok'
       message = "instance #{instance_name} started."
@@ -107,12 +119,12 @@ class CommonUtil
     result
   end
 
-  def self.stopinstance(instance_name)
+  def self.stopinstance(instance_name, user, pass)
     success = ''
     message = ''
     @instance = Instance[name: instance_name]
     if @instance
-      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm = Dcmgr.new(@instance[:host_ip], user, pass)
       dm.start_vm(@instance.name)
       success = 'ok'
       message = "instance #{instance_name} started."
@@ -127,12 +139,12 @@ class CommonUtil
     result
   end
 
-  def self.deleteinstance(instance_name)
+  def self.deleteinstance(instance_name, user, pass)
     success = ''
     message = ''
     @instance = Instance[name: instance_name]
     if @instance
-      dm = Dcmgr.new(@instance[:host_ip], 'dcnode', 'dcnode')
+      dm = Dcmgr.new(@instance[:host_ip], user, pass)
       dm.remove_vm(@instance.name)
       @instance.delete
     end
@@ -141,7 +153,7 @@ class CommonUtil
     message = 'deleted successfully'
 
     result = {
-      status: succss,
+      status: success,
       message: message
     }
     result
@@ -162,8 +174,12 @@ get '/instances' do
   @message = ''
   @start_ip = settings.iprange_start
   @end_ip = settings.iprange_end
+  @instances = Instance.all
+  @sshkeys = Sshkey.all
   haml :instances, locals: {
     message: '',
+    instances: @instances,
+    sshkeys: @sshkeys,
     start_ip: settings.iprange_start,
     end_ip: settings.iprange_end
   }
@@ -173,22 +189,28 @@ post '/instances' do
   message = ''
 
   if params[:operation] == 'create'
-    result = CommonUtil.createinstance(params[:name], params[:keyname])
+    puts params[:keypair]
+    @sshkey = Sshkey[params[:keypair]]
+    result = CommonUtil.createinstance(params[:name], @sshkey.public_key, settings.metadata_dir, settings.iprange_start.split('.'), settings.iprange_end.split('.'), settings.nodes, settings.user, settings.pass)
   elsif params[:operation] == 'start'
-    result = CommonUtil.startinstance(params[:name])
+    result = CommonUtil.startinstance(params[:name], settings.user, settings.pass)
   elsif params[:operation] == "stop"
-    result = CommonUtil.stopinstance(params[:name])
+    result = CommonUtil.stopinstance(params[:name], settings.user, settings.pass)
   end
 
+  @instances = Instance.all
+  @sshkeys = Sshkey.all
   haml :instances, locals: {
     message: result[:message],
+    instances: @instances,
+    sshkeys: @sshkeys,
     start_ip: settings.iprange_start,
     end_ip: settings.iprange_end
   }
 end
 
 delete '/instances' do
-  CommonUtil.deleteinstance(params[:name])
+  CommonUtil.deleteinstance(params[:name], settings.user, settings.pass)
   redirect to('/instances')
 end
 
@@ -230,13 +252,15 @@ get '/api/instances' do
   Instance.to_json
 end
 
-post '/api/instances/' do
-  result = CommonUtil.createinstance
+post '/api/instances/:name/:keypair' do
+  @sshkey = Sshkey[params[:keypair]]
+  result = CommonUtil.createinstance(params[:name], @sshkey.public_key, settings.metadata_dir, settings.iprange_start.split('.'), settings.iprange_end.split('.'), settings.nodes)
   result.to_json
 end
 
 delete '/api/instances/:id' do
-  result = CommonUtil.deleteinstance
+  @instance = Instance[params[:id]]
+  result = CommonUtil.deleteinstance(@instance.name, settings.user, settings.pass)
   result.to_json
 end
 
@@ -260,7 +284,7 @@ get '/api/sshkeys' do
 end
 
 post '/api/sshkeys' do
-  info = sshkeygenerate
+  info = CommonUtil.sshkeygenerate
   # Use services like S3 or cloudfront in the future??
   send_file "/tmp/#{info[:name]}.pem", filename: "#{info[:name]}.pem", disposition: :attachment
 end
@@ -270,9 +294,8 @@ put '/api/sshkeys/:id' do
 end
 
 delete '/api/sshkeys/:id' do
-  @sshkey = Sshkey[params[:id]]
-  if @sshkey
-    @sshkey.delete
+  result = CommonUtil.sshkeyremove(params[:id])
+  if result
     { status: 'sshkey removed' }.to_json
   else
     { status: 'no sshkey' }.to_json
@@ -282,12 +305,12 @@ end
 # Container API
 
 post '/api/containers/:name' do
-  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  dm = Ctnmgr.new(settings.lxcnodes.first, settings.user, settings.pass)
   data = dm.launch_vm(params[:name])
   Instance.create(
   {
     name: params[:name],
-    host_ip: '192.168.33.25',
+    host_ip: settings.lxcnodes.first,
     guest_ip: data[:ip],
     created: Time.now,
     updated: Time.now
@@ -296,24 +319,24 @@ post '/api/containers/:name' do
 end
 
 get '/api/containers/:id/start' do
-  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  dm = Ctnmgr.new(settings.lxcnodes.first, settings.user, settings.pass)
   @container = Instance[params[:id]]
   data = dm.start_vm(@container.name)
   { status: 'container started' }.to_json
 end
 
 get '/api/containers/:id/stop' do
-  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  dm = Ctnmgr.new(settings.lxcnodes.first, settings.user, settings.pass)
   @container = Instance[params[:id]]
   puts @container.inspect
-  data = dm.stop_vm(@container.name)
+  dm.stop_vm(@container.name)
   { status: 'container stopped' }.to_json
 end
 
 delete '/api/containers/:id' do
-  dm = Ctnmgr.new('192.168.33.25', 'vagrant', 'vagrant')
+  dm = Ctnmgr.new(settings.lxcnodes.first, settings.user, settings.pass)
   @container = Instance[params[:id]]
-  data = dm.destroy_vm(@container.name)
+  dm.destroy_vm(@container.name)
   @container.delete
   { status: 'container deleted' }.to_json
 end

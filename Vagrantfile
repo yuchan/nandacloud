@@ -1,6 +1,10 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.provider :vmware_fusion do |vmware, override|
+    vmware.vmx['vhv.enable'] = true # nested virtualization
+  end
+
   config.vm.define :dcmgr do | dcmgr |
     dcmgr.vm.box = "hashicorp/precise64"
     dcmgr.vm.hostname = "dcmgr"
@@ -22,7 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   nodes.each do |key, value|
     config.vm.define key do | dcnode |
-      dcnode.vm.box = "hashicorp/precise64"
+      dcnode.vm.box = "phusion/ubuntu-14.04-amd64"
       dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 
@@ -44,7 +48,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   lxc_nodes.each do |key, value|
     config.vm.define key do | dcnode |
-      dcnode.vm.box = "ubuntu/trusty64"
+      dcnode.vm.box = "phusion/ubuntu-14.04-amd64"
       dcnode.vm.hostname = key
       dcnode.vm.network :private_network, ip: value
 
