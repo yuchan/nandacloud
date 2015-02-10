@@ -1,16 +1,11 @@
-Memo
-===============
-
-https://help.ubuntu.com/community/KVM/Installation
-
 Nandacloud
 ===============
 
-各ノードサーバーに対して、、
-* virt-installコマンドがインストールされていないのでインストールしてください。
-* virt-viewerがないとvncに繋げないそうです。インストールしてください。
+purchase VM Ware (Fusion|Workstation)
+--------------
 
-マネジャーには不要です。
+Virtual Machines must support Intel-VT or AMD-V.
+VirtualBox doesn't support nested virtualization because it is missing those virtualization specs now.
 
 Prepare Vagrant
 --------------
@@ -18,20 +13,23 @@ Prepare Vagrant
 ### vagrant --version
 
     Vagrant 1.7.2
-    
+
 ### vagrant plugin list
 
+## Free
     vagrant-omnibus (1.4.1)
     vagrant-share (1.1.3, system)
     vagrant-vbguest (0.10.0)
     vagrant-vbox-snapshot (0.0.8)
-    vagrant-vmware-fusion (3.2.0)
+
+## Paid
+    vagrant-vmware-fusion (3.2.1)
 
 ### Gem install
 
-    $ cd (プロジェクトディレクトリ) && bundle install
-    $ cd (プロジェクトディレクトリ)/chef && bundle exec berks vendor cookbooks
-    $ cd (プロジェクトディレクトリ)/app && bundle install
+    $ cd (path to nandacloud) && bundle install
+    $ cd (path to nandacloud)/chef && bundle exec berks vendor cookbooks
+    $ cd (path to nandacloud)/app && bundle install
 
 ### Vagrant VMs
 
@@ -54,9 +52,14 @@ Install ruby on VMs
 I recommend you to use rbenv, but you may install ruby on system.
 I suppose that ruby version is larger than 2.0.0(latest is 2.2.0).
 
+To install rbenv in the bare environment, please use setuprbenv.sh.
 
 Database
 -------------------
 
 Currently, we use sqlite3, because we make development process simple.
 
+Memo
+===============
+
+https://help.ubuntu.com/community/KVM/Installation
