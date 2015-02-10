@@ -7,13 +7,19 @@
 # 種イメージに仕込んでおく起動スクリプト
 
 touch /var/lock/subsys/local
-mount LABEL=METADATA /metadata
-size=$(wc -c /home/nanda/.ssh/authorized_keys | awk '{print $1}')
-if [ $size -eq 0 ]; then
-  cat /metadata/pub.pub >> /home/nanda/.ssh/authorized_keys
+dir=/metadata
+
+if [ ! -a $dir ]; then
+  mkdir /metadata
+  mount LABEL=METADATA /metadata
+  size=$(wc -c /home/nanda/.ssh/authorized_keys | awk '{print $1}')
+  if [ $size -eq 0 ]; then
+    cat /metadata/pub.pub >> /home/nanda/.ssh/authorized_keys
+  fi
+  size=$(wc -c /etc/sysconfig/network-scripts/ifcfg-eth0 | awk '{print $1}')
+  if [ $size -eq 0 ]; then
+    cp /metadata/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0
+  fi
+  service network restart
 fi
-size=$(wc -c /etc/sysconfig/network-scripts/ifcfg-eth0 | awk '{print $1}')
-if [ $size -eq 0 ]; then
-  cp /metadata/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0
-fi
-service network restart
+

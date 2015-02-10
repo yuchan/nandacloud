@@ -21,14 +21,14 @@ class Dcmgr
     Net::SSH.start(@host, @name, password: @pass) do |ssh|
       cmds = [
         'mkdir -p /tmp/md_mount',
+        'sudo bash /vagrant/app/metadata/md_mount.bash',
         "echo -e \"DEVICE=eth0\\nTYPE=Ethernet\\nONBOOT=yes\\nNM_CONTROLLED=yes\\nBOOTPROTO=static\\nIPADDR=#{new_ip}\" | sudo tee /tmp/md_mount/ifcfg-eth0",
         "echo #{publickey} > /tmp/md_mount/pub.pub",
         'sync',
-        'sudo bash /vagrant/app/metadata/md_mount.bash',
         "cp #{nodepath} ~/vm/#{name}.img",
-        "sudo virt-install --name #{name} --ram 512 --disk ~/vm/#{name}.img,format=qcow2 --network bridge=br0 --vnc --noautoconsole --import",
-        'sudo bash /vagrant/app/metadata/md_umount.bash',
-        'rm -rf /tmp/md_mount'
+        "sudo virt-install --name #{name} --ram 512 --disk ~/vm/#{name}.img,format=qcow2 --disk /tmp/metadata_drive --network bridge=br0 --vnc --noautoconsole --import",
+        'rm -rf /tmp/md_mount',
+        'sudo bash /vagrant/app/metadata/md_umount.bash'
       ]
       ssh.exec cmds.join(' && ') do |_ch, stream, data|
         if stream == :stderr
