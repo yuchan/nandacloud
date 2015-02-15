@@ -62,4 +62,5 @@ Currently, we use sqlite3, because we make development process simple.
 Memo
 ===============
 
-https://help.ubuntu.com/community/KVM/Installation
+- https://help.ubuntu.com/community/KVM/Installation
+- https://github.com/yuchan/nanda-lxc
